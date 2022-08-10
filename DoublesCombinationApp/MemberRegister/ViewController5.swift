@@ -80,9 +80,17 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     // listScrollViewの枠の一番下のy座標
     var listScrollViewMax_y: CGFloat = 0
     
+    // listScrollViewのy座標（初期値）
+    var listScrollViewFrameOriginY: CGFloat = 0
+    
+    // listScrollViewのタップ座標
+    var tapLocation: CGPoint = CGPoint(x: 0, y: 0)
+    
+    
+    
     // viewが表示される度に呼ばれる
     override func viewWillAppear(_ animated: Bool) {
-        print("viewWillAppearが呼ばれた！！")
+        //print("viewWillAppearが呼ばれた！！")
         
         // タブの有効化
         let tagetTabBar = 0 //タブの番号
@@ -91,7 +99,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
         
         // GroupList再読み込み
         reloadGroupList()
-        print("groupList = \(groupList)")
+        //print("groupList = \(groupList)")
         
         initReadUserDefaults() // userDefaultsに保存されたデータの取得
         
@@ -112,7 +120,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             }
         }
         
-        print("groupList = \(groupList)")
+        //print("groupList = \(groupList)")
         
         // selectedLabelTagの取得に失敗した場合(selectedLabelTag = 0)、
         // またはgroupListに登録されていない場合(checkFlg = false)、
@@ -123,7 +131,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             UserDefaults.standard.set(selectedLabelTag, forKey: selectedLabelKey)
         }
         
-        print("取得したselectedLabelTag = \(selectedLabelTag)")
+        //print("取得したselectedLabelTag = \(selectedLabelTag)")
         
         viewAnimate(selectedLabelTag: selectedLabelTag) // 選択されたメニューラベルにフォーカス
         
@@ -252,7 +260,52 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
         //-- userDefaultsに保存されたデータの取得
         initReadUserDefaults()
         
+        // ***キーボード表示・非表示の際にViewを上下に移動
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
     }
+    
+    // キーボードを閉じる処理
+    @objc public func dismissKeyboard() {
+        view.endEditing(true)
+    }
+    
+    
+    // ***キーボードを表示する際の処理
+    @objc func keyboardWillShow(notification: NSNotification) {
+//        if !textField3.isFirstResponder {
+//            return
+//        }
+    
+        if self.listScrollView.frame.origin.y == listScrollViewFrameOriginY {
+            if let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
+                self.listScrollView.frame.origin.y -= keyboardRect.height * 0.4
+            }
+        }
+    }
+    
+    // ***キーボードを閉じる際の処理
+    @objc func keyboardWillHide(notification: NSNotification) {
+        if self.listScrollView.frame.origin.y != listScrollViewFrameOriginY {
+            self.listScrollView.frame.origin.y = listScrollViewFrameOriginY
+        }
+    }
+    
+    // listScrollViewタップ座標取得
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let touch = touches.first! //このタッチイベントの場合確実に1つ以上タッチ点があるので`!`つけてOKです
+        let location = touch.location(in: self.view) //in: には対象となるビューを入れます
+        //print("location \(location)")
+        tapLocation = location
+//        for touch in touches {
+//            let location = touch.location(in: listScrollView)
+//            print("location \(location)")
+//            tapLocation = location
+//        }
+    }
+    
+    
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -274,13 +327,13 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     
     // userDefaultsに保存されたデータの取得
     func initReadUserDefaults() {
-        print("UserDefaults読み込み")
+        //print("UserDefaults読み込み")
         // groupList読み込み
         groupList.removeAll()
         if let groupIDListTmp = loadGroupList() {
             // 保存データが存在する場合
             groupList.append(contentsOf: groupIDListTmp)
-            print("groupList取得")
+            //print("groupList取得")
         }
         
         // データが無い場合
@@ -291,27 +344,27 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             df.dateFormat = "yyyyMMddHHmmss"
             // グループIDを発行
             let groupID: Int = Int( df.string(from: date))!
-            print("groupID = \(groupID)")
+            //print("groupID = \(groupID)")
             groupList.append(GroupList(ID: groupID, name: "グループ1"))
             
             // groupListを保存
             saveGroupList(groupList: groupList)
         }
         
-        print("groupList = \(groupList)")
+        //print("groupList = \(groupList)")
         
         // stItemList再取得
-        print("stItemList = \(stItemList)")
+        //print("stItemList = \(stItemList)")
         stItemList.removeAll()
         if let stItemListTmp = loadStItemList() {
             // 保存データが存在する場合
             stItemList.append(contentsOf: stItemListTmp)
-            print("stItemList取得")
+            //print("stItemList取得")
         } else {
             print("stItemList取得失敗")
             stItemList = []
         }
-        print("stItemList = \(stItemList)")
+        //print("stItemList = \(stItemList)")
         
         // stItemList読み込みと整理
         // groupListが持つIDが、stItemListが持つitemListKeyに保存されているかチェック
@@ -331,7 +384,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             if checkIDFlg == false {
                 // IDが保存されていない場合
                 // 新規に追加されたIDなので、stItemListにも追加するために仮で保持
-                print("IDが新規追加されたので、stItemListにも追加")
+                //print("IDが新規追加されたので、stItemListにも追加")
                 addIDTmp.append(ID)
                 
             }
@@ -362,7 +415,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             if checkKeyFlg == false {
                 // itemListKeyがgroupListに存在しない場合
                 // groupListから削除されているので、stItemListからも削除する
-                print("groupListから削除されたIDなので、stItemListからも削除")
+                //print("groupListから削除されたIDなので、stItemListからも削除")
                 deleteElementNumber.append(i)
             }
         }
@@ -372,7 +425,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             stItemList.remove(at: deleteElementNumber[i])
         }
         
-        print("stItemList = \(stItemList)")
+        //print("stItemList = \(stItemList)")
         // 保存
         saveStItemList(stItemList: stItemList)
         
@@ -383,20 +436,14 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
         if selectedLabelTag == 0 {
             selectedLabelTag = groupList[0].ID
         }
-        print("取得したselectedLabelTag = \(selectedLabelTag)")
+        //print("取得したselectedLabelTag = \(selectedLabelTag)")
     }
     
-    // userDefaults全削除
-    func removeUserDefaults() {
-        let appDomain = Bundle.main.bundleIdentifier
-        UserDefaults.standard.removePersistentDomain(forName: appDomain!)
-    }
-    
-    // キーボードと閉じる際の処理
-    @objc public func dismissKeyboard() {
-        print("キーボードを閉じるA")
-        view.endEditing(true)
-    }
+    // userDefaults全削除（開発用）
+//    func removeUserDefaults() {
+//        let appDomain = Bundle.main.bundleIdentifier
+//        UserDefaults.standard.removePersistentDomain(forName: appDomain!)
+//    }
     
     // groupList再取得
     func reloadGroupList() {
@@ -414,14 +461,14 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             df.dateFormat = "yyyyMMddHHmmss"
             // グループIDを発行
             let groupID: Int = Int( df.string(from: date))!
-            print("groupID = \(groupID)")
+            //print("groupID = \(groupID)")
             groupList.append(GroupList(ID: groupID, name: "グループ1"))
             
             // groupListを保存
             saveGroupList(groupList: groupList)
         }
-        print("groupList再読み込み")
-        print("groupList = \(groupList)")
+//        print("groupList再読み込み")
+//        print("groupList = \(groupList)")
     }
     
     // 保存(groupList)
@@ -476,11 +523,11 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     }
     
     
-    // textField以外をタップで閉じる
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("キーボードを閉じるA")
-        view.endEditing(true)
-    }
+//    // textField以外をタップで閉じる
+//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+////        print("キーボードを閉じるA")
+//        view.endEditing(true) // キーボードを閉じる
+//    }
 
     
     
@@ -497,11 +544,44 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
         let screenWidth:CGFloat = self.view.frame.width
         let screenHeight:CGFloat = self.view.frame.height
         
+        
+        
+        // iPhone以外の場合
+        if UIDevice.current.userInterfaceIdiom != .phone {
+            //print("これはiPadです。")
+            // interFrame2のレイアウト調整
+            let listScrollView_x = self.listScrollView.frame.origin.x
+            let listScrollView_y = self.listScrollView.frame.origin.y
+            let listScrollView_width = self.listScrollView.frame.width
+            //let interFrame2_height = self.listScrollView.frame.height
+            //AutoLayout解除
+            self.listScrollView.translatesAutoresizingMaskIntoConstraints = true
+            // currentViewControllerの高さ*0.8
+            self.listScrollView.frame = CGRect(x: listScrollView_x, y: listScrollView_y,
+                                              width: listScrollView_width,
+                                              height: screenHeight * 0.62)
+            
+            
+        }
+        
+        
+        
+        //print("呼ばれた！！！！！")
+        
+        print("listScrollViewFrameOriginY = \(listScrollViewFrameOriginY)")
+        
+        // listScrollViewのy座標を一度だけ記録（キーボード表示で上下移動後に使用）
+        if listScrollViewFrameOriginY == 0 {
+            listScrollViewFrameOriginY = listScrollView.frame.origin.y
+            print("listScrollViewFrameOriginY = \(listScrollViewFrameOriginY)")
+        }
+//        listScrollViewFrameOriginY = listScrollView.frame.origin.y
+        
         // listScrollViewの枠の一番下のy座標を記録
         listScrollViewMax_y = listScrollView.frame.origin.y + listScrollView.frame.height
         
-        print("listScrollView.frame = \(listScrollView.frame)")
-        print("listScrollViewMax_y = \(listScrollViewMax_y)")
+//        print("listScrollView.frame = \(listScrollView.frame)")
+//        print("listScrollViewMax_y = \(listScrollViewMax_y)")
         
         let addbuttonWidth: CGFloat = screenHeight * 42/896 + 20
         if listScrollViewMax_y > 0 {
@@ -559,7 +639,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
         if selectedLabelTag == 0 {
             selectedLabelTag = groupList[0].ID
         }
-        print("取得したselectedLabelTag = \(selectedLabelTag)")
+        //print("取得したselectedLabelTag = \(selectedLabelTag)")
         
         // 選択されたラベルにフォーカスして移動する & 選択されたラベルに対応したリストを表示する
         viewAnimate(selectedLabelTag: selectedLabelTag)
@@ -583,7 +663,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     
     // タブにgroupListを表示（内容更新）
     func showTabs() {
-        print("ヘッダーメニュー表示")
+//        print("ヘッダーメニュー表示")
         // scrollViewのsubView削除(画面遷移で戻ってくるときに削除)
         removeAllSubviews(parentView: scrollView)
         
@@ -613,7 +693,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             // タグ付け
             label.tag = groupList[i].ID
             
-            print("label.tag = \(label.tag)")
+            //print("label.tag = \(label.tag)")
             
             //label.backgroundColor = UIColor.systemBlue
             
@@ -630,8 +710,8 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     
     // リスト表示
     func showList() {
-        print("リスト表示")
-        print("groupList = \(groupList)")
+//        print("リスト表示")
+//        print("groupList = \(groupList)")
         
         // listScrollViewのsubView削除(画面遷移で戻ってくるときに削除)
         removeAllSubviews(parentView: listScrollView)
@@ -666,10 +746,10 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             
             
             // キーボードを閉じる設定
-            // UISTableView のドラッグ開始時にキーボードを閉じる
+            // UITableView のドラッグ開始時にキーボードを閉じる
             tableView.keyboardDismissMode = .onDrag
             
-            // UISTableView を下方向ドラッグで上にスクロールするのに合わせてキーボードを閉じる
+            // UITableView を下方向ドラッグで上にスクロールするのに合わせてキーボードを閉じる
             tableView.keyboardDismissMode = .interactive
             
             
@@ -714,7 +794,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             // タグ付け
             tableView.tag = groupList[i].ID
             
-            print("tableView.tag = \(tableView.tag)")
+            //print("tableView.tag = \(tableView.tag)")
             
             listScrollView.addSubview(tableView)
             
@@ -727,7 +807,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
         //scrollViewのcontentSizeを，タブ全体のサイズに合わせる
         //最終的なoriginX = タブ全体の横幅
         listScrollView.contentSize = CGSize(width:listOriginX, height:tableViewHeight)
-        print("listScrollView.contentSize.width = \(listScrollView.contentSize.width)")
+        //print("listScrollView.contentSize.width = \(listScrollView.contentSize.width)")
     }
     
     // リストの表示内容更新
@@ -738,7 +818,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
                 // tableViewの場合
                 if tableView.tag == selectedLabelTag {
                     // 選択中（表示中）のtableViewのタグの場合
-                    print("tableViewのリストの表示更新")
+                    //print("tableViewのリストの表示更新")
                     tableView.reloadData() // 表示更新
                     break for_searchSubView
                 }
@@ -774,10 +854,10 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
                 for j in 0..<stItemList[i].itemList.count {
                     if stItemList[i].itemList[j].text != "" && stItemList[i].itemList[j].checkLfg != true {
                         // テキスト=""以外、かつ、チェックフラグ=false以外の場合
-                        print("text = \(stItemList[i].itemList[j].text)")
-                        print("checkLfg = \(stItemList[i].itemList[j].checkLfg)")
+                        //print("text = \(stItemList[i].itemList[j].text)")
+                        //print("checkLfg = \(stItemList[i].itemList[j].checkLfg)")
                         count += 1
-                        print("count = \(count)")
+                        //print("count = \(count)")
                     }
                 }
                 break for_searchKey
@@ -789,12 +869,12 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     
     // リストセル追加ボタンタップ時の処理
     @IBAction func addButtonTapped(_ sender: Any) {
-        print("追加ボタンタップ！")
-        print("selectedLabelTag = \(selectedLabelTag)")
-        print("stItemList = \(stItemList)")
-        
-        print("キーボードを閉じるB")
-        view.endEditing(true)
+//        print("追加ボタンタップ！")
+//        print("selectedLabelTag = \(selectedLabelTag)")
+//        print("stItemList = \(stItemList)")
+//
+//        print("キーボードを閉じるB")
+        view.endEditing(true) // キーボードを閉じる
         
         
         // 空白セル追加
@@ -814,7 +894,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
         }
         
         
-        print("stItemList = \(stItemList)")
+        //print("stItemList = \(stItemList)")
         
         
         // 以下、サンプル
@@ -833,11 +913,11 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     // リストセル削除ボタンタップ時の処理
     @IBAction func trashButtonTapped(_ sender: Any) {
         // チェックマークのついたセルを削除
-        print("削除ボタンタップ！")
-        print("selectedLabelTag = \(selectedLabelTag)")
-        print("stItemList = \(stItemList)")
-        
-        print("キーボードを閉じるB")
+//        print("削除ボタンタップ！")
+//        print("selectedLabelTag = \(selectedLabelTag)")
+//        print("stItemList = \(stItemList)")
+//
+//        print("キーボードを閉じるB")
         view.endEditing(true)
         
         // セル削除
@@ -852,14 +932,14 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
                         stItemList[i].itemList.remove(at: j)
                     }
                 }
-                print("stItemList[i].itemList = \(stItemList[i].itemList)")
+                //print("stItemList[i].itemList = \(stItemList[i].itemList)")
                 
                 // 削除した結果、要素数が0となった場合
                 if stItemList[i].itemList.count == 0 {
                     // データが存在しない場合、空セル追加
                     stItemList[i].itemList.append(CellItem(checkLfg: false, text: ""))
-                    print("空セル追加")
-                    print("stItemList[i].itemList = \(stItemList[i].itemList)")
+                    //print("空セル追加")
+                    //print("stItemList[i].itemList = \(stItemList[i].itemList)")
                 }
                 
             } else {
@@ -870,7 +950,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
         
         
         
-        print("stItemList = \(stItemList)")
+        //print("stItemList = \(stItemList)")
         
         // ここから
         // 表示更新
@@ -907,9 +987,9 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     
     // labelタップイベント
     @objc func labelTapped(_ sender: UITapGestureRecognizer) {
-        print("メニューラベルタップ!!!")
+//        print("メニューラベルタップ!!!")
         
-        print("キーボードを閉じるC")
+//        print("キーボードを閉じるC")
         view.endEditing(true)
         
         // タップしたsubViewのタグ取得
@@ -918,7 +998,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
         selectedLabelTag = index!
         
         
-        print("タップされたラベルのタグ：selectedLabelTag = \(selectedLabelTag)")
+//        print("タップされたラベルのタグ：selectedLabelTag = \(selectedLabelTag)")
 //        print("tableTag = \(tableTag)")
         
         
@@ -940,16 +1020,16 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     
     // 選択されたラベルにフォーカスして移動する & 選択されたラベルに対応したリストを表示する
     func viewAnimate(selectedLabelTag: Int) {
-        print("selectedLabelTag = \(selectedLabelTag)")
+        //print("selectedLabelTag = \(selectedLabelTag)")
         // すべてのsubViewを検索
         for subView in self.scrollView.subviews {
             // ラベルの場合
             if let label = subView as? UILabel {
-                print("labelがタップされた！")
+                //print("labelがタップされた！")
                 // タップされたtagがのlabelであるかどうか判定
                 //if label.tag == sender.view?.tag {
                 if label.tag == selectedLabelTag {
-                    print("タップされたlabelの場合、色付けする")
+                    //print("タップされたlabelの場合、色付けする")
                     // タップされたlabelの場合
                     label.textColor = textColor
                     label.backgroundColor = mainColor
@@ -962,7 +1042,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
                             break for_getListCount
                         }
                     }
-                    print("listViewcount = \(listViewcount)")
+                    //print("listViewcount = \(listViewcount)")
                     
                     // ラベルスクロール
                     labelScroll(listViewcount: listViewcount)
@@ -972,13 +1052,13 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
                     UIView.animate(withDuration: 0.3, animations: {
                         self.listScrollView.contentOffset = CGPoint(x:listX, y:0)
                     })
-                    print("表示するリストのタグと位置")
-                    print("groupList = \(groupList)")
-                    print("listViewcount = \(listViewcount)")
-                    print("listX = \(listX)")
+                    //print("表示するリストのタグと位置")
+                    //print("groupList = \(groupList)")
+                    //print("listViewcount = \(listViewcount)")
+                    //print("listX = \(listX)")
                     
                 } else {
-                    print("タップされていないラベルの場合、色付けを解除する")
+                    //print("タップされていないラベルの場合、色付けを解除する")
                     // その他のlabelの場合
                     label.textColor = .black
                     label.backgroundColor = .clear
@@ -1023,23 +1103,26 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     
     // listScrollView(メインのToDoリスト)横スクロール時の処理(ヘッダーメニューを移動する)
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView){
-        print("スクロールストップ")
+        //print("スクロールストップ")
+        
+        // キーボードを閉じる
+        dismissKeyboard()
         
         if scrollView == listScrollView {
-            print("listScrollViewスクロールストップ")
-            print("scrollView.tag = \(scrollView.tag)")
-            print("listScrollView.tag = \(listScrollView.tag)")
+            //print("listScrollViewスクロールストップ")
+            //print("scrollView.tag = \(scrollView.tag)")
+            //print("listScrollView.tag = \(listScrollView.tag)")
             
             // スクロール後のx座標取得
             let listX: CGFloat = self.listScrollView.contentOffset.x
             // スクロール後の表示中のlistScrollViewの番号取得（0,1,2,...）
             let listViewcountTmp: Int = Int(listX / listScrollView.frame.width)
-            print("listX = \(listX)")
-            print("listViewcountTmp = \(listViewcountTmp)")
+            //print("listX = \(listX)")
+            //print("listViewcountTmp = \(listViewcountTmp)")
             
             // 表示中のsubViewのタグを記録
             selectedLabelTag = groupList[listViewcountTmp].ID
-            print("selectedLabelTag = \(selectedLabelTag)")
+            //print("selectedLabelTag = \(selectedLabelTag)")
             
             // すべてのsubViewを検索
             for subView in self.scrollView.subviews {
@@ -1060,7 +1143,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
             }
         }
         
-        print("selectedLabelTag = \(selectedLabelTag)")
+        //print("selectedLabelTag = \(selectedLabelTag)")
         // 表示されたラベルのタグを保存
         UserDefaults.standard.set(selectedLabelTag, forKey: selectedLabelKey)
         
@@ -1072,14 +1155,14 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     
     // tableViewタップイベント
     @objc func tableViewTapped(_ sender: UITapGestureRecognizer) {
-        print("tableViewタップ！")
+        //print("tableViewタップ！")
         
         // タップしたsubViewのタグ取得
         let index = sender.view?.tag
         // labelタグを記録
         selectedLabelTag = index!
         
-        print("タップされたtableViewのタグ：selectedLabelTag = \(selectedLabelTag)")
+        //print("タップされたtableViewのタグ：selectedLabelTag = \(selectedLabelTag)")
     }
     
     
@@ -1090,7 +1173,7 @@ class ViewController5: UIViewController, UIScrollViewDelegate, GADBannerViewDele
     
     // VC6→C5へ戻る際の処理
     @IBAction func backToVC5(segue: UIStoryboardSegue) {
-        print("VC6→C5へ戻る")
+        //print("VC6→C5へ戻る")
 //        // 画面更新
 //        viewDidLayoutSubviews()
         
@@ -1152,13 +1235,13 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
         for_getCellCount: for i in 0..<stItemList.count {
             if tableView.tag == stItemList[i].itemListKey {
                 // tableViewのタグが保存データに存在する場合
-                print("セル数")
-                print("tableView.tag = \(tableView.tag)")
+                //print("セル数")
+                //print("tableView.tag = \(tableView.tag)")
                 itemCount = stItemList[i].itemList.count
                 break for_getCellCount
             }
         }
-        print("itemCount = \(itemCount)")
+        //print("itemCount = \(itemCount)")
         return itemCount
     }
 
@@ -1166,9 +1249,9 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ItemCell", for: indexPath ) as! ItemCell
         
-        print("セルの内容")
-        print("tableView.tag = \(tableView.tag)")
-        print("stItemList = \(stItemList)")
+        //print("セルの内容")
+        //print("tableView.tag = \(tableView.tag)")
+        //print("stItemList = \(stItemList)")
         
         var getCellDataFlg: Bool = false
         
@@ -1176,8 +1259,8 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
         for_getCellData: for i in 0..<stItemList.count {
             if tableView.tag == stItemList[i].itemListKey {
                 // tableViewのタグが保存データに存在する場合
-                print("セルデータ取得")
-                print("tableView.tag = \(tableView.tag)")
+                //print("セルデータ取得")
+                //print("tableView.tag = \(tableView.tag)")
                 // セルごとのチェックフラグとテキストを格納
                 itemList = stItemList[i].itemList
                 
@@ -1192,20 +1275,20 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
             // 保存
             stItemList.append(ItemList(itemListKey: tableView.tag, itemList: itemList))
             saveStItemList(stItemList: stItemList)
-            print("タグ該当なしのため空セル追加&保存")
-            print("stItemList = \(stItemList)")
+            //print("タグ該当なしのため空セル追加&保存")
+            //print("stItemList = \(stItemList)")
         }
         
-        print("itemList = \(itemList)")
+        //print("itemList = \(itemList)")
         var flg:Bool = false
         var text: String = ""
         if itemList.count > 0 && itemList.count > indexPath.row {
-            print("個別セルのチェックフラグとtext取得")
+            //print("個別セルのチェックフラグとtext取得")
             flg = itemList[indexPath.row].checkLfg
             text = itemList[indexPath.row].text
         }
-        print("flg = \(flg)")
-        print("text = \(text)")
+        //print("flg = \(flg)")
+        //print("text = \(text)")
         cell.checkFlg = flg // セルのフラグを反映
         cell.setCell(text: text) // セルのテキストを入力
         cell.setCellrow(cellRow: indexPath.row) // セルの行数を保持
@@ -1223,7 +1306,7 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
     
     // セル移動時のデータの処理
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        print("セルを移動！！")
+        //print("セルを移動！！")
         // セルのテキストデータ移動
         for_sortData: for i in 0..<stItemList.count {
             if stItemList[i].itemListKey == tableView.tag {
@@ -1234,7 +1317,7 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
                 // 移動先の配列の位置にデータを挿入
                 stItemList[i].itemList.insert(moveData, at:destinationIndexPath.row)
                 // 保存
-                print("stItemList = \(stItemList)")
+                //print("stItemList = \(stItemList)")
                 saveStItemList(stItemList: stItemList)
                 
                 break for_sortData
@@ -1253,7 +1336,7 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
     // セルを削除した時の処理
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         
-        print("editingStyle = \(editingStyle)")
+        //print("editingStyle = \(editingStyle)")
         // 削除可能かどうか判定
         if editingStyle == UITableViewCell.EditingStyle.delete {
             // セルのテキストデータ削除
@@ -1264,7 +1347,7 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
                     // セルを削除
                     tableView.deleteRows(at: [indexPath], with: UITableView.RowAnimation.fade)
                     // 保存
-                    print("stItemList = \(stItemList)")
+                    //print("stItemList = \(stItemList)")
                     saveStItemList(stItemList: stItemList)
                     
                     break for_deleteData
@@ -1299,13 +1382,13 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
     // tableViewの見た目設定
     // 左側の＋/ーの表示
     func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
-        print("tableView表示設定1")
+        //print("tableView表示設定1")
         return .none // 表示しない
     }
     
     // 編集モード時、左側の＋/ーを表示にしてできたスペースを埋める
     func tableView(_ tableView: UITableView, shouldIndentWhileEditingRowAt indexPath: IndexPath) -> Bool {
-        print("tableView表示設定2")
+        //print("tableView表示設定2")
         return false // スペースを埋めるように左につめる
     }
     
@@ -1313,10 +1396,9 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
     
     // デリゲートメソッド(完了タップ)
     func textFieldDidEndEditing(cell: ItemCell, value:String) {
-        // 呼ばれていない！！？？
-        print("デリゲートメソッド")
-        print("selectedLabelTag = \(selectedLabelTag)")
-        print("cell.cellRow = \(cell.cellRow)")
+        //print("デリゲートメソッド")
+        //print("selectedLabelTag = \(selectedLabelTag)")
+        //print("cell.cellRow = \(cell.cellRow)")
         //let tableView: UITableView = self.view.viewWithTag(selectedLabelTag) as! UITableView
 //        var tableView = UITableView()
 //        var getSubViewFlg: Bool = false // デリゲートを受け取るtableViewが存在するかどうかのフラグ
@@ -1345,7 +1427,7 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
         // セルの行数を取得
         let index = cell.cellRow
 
-        print("index = \(index)")
+        //print("index = \(index)")
         
         // 表示中のtableViewのitemListを取得
         //var itemList: [String] = []
@@ -1356,12 +1438,23 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
 //                print("tableView.tag = \(tableView.tag)")
                 //itemList = stItemList[i].itemList
                 
+                //print("stItemList[i].itemList.count = \(stItemList[i].itemList.count)")
+                //print("stItemList.count = \(stItemList.count)")
+                //print("stItemList = \(stItemList)")
+                
+                // エラー回避（Thread 1: Fatal error: Index out of range）
+                if (stItemList.count <= i) {
+                    break for_setValue
+                }
+                if (stItemList[i].itemList.count <= index) {
+                    break for_setValue
+                }
+                
                 //データを更新
                 stItemList[i].itemList[index].text = value // 引数(cell入力文字列)を入力
                 //stItemList[i].itemList[index!.row] = value
                 
                 
-                print("stItemList[i].itemList.count = \(stItemList[i].itemList.count)")
                 // 選択中のセルがtableViewの末尾のセルかどうか判定
                 if index == stItemList[i].itemList.count - 1 {
                     // 選択中のセルが末尾の場合
@@ -1379,18 +1472,18 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
             }
         }
         
-        print("更新後のデータ")
-        print("index.row = \(index)")
-        print("groupList = \(groupList)")
-        print("stItemList = \(stItemList)")
+//        print("更新後のデータ")
+//        print("index.row = \(index)")
+//        print("groupList = \(groupList)")
+//        print("stItemList = \(stItemList)")
         
         
         
         
         // 保存
         saveStItemList(stItemList: stItemList)
-        print("stItemList = \(stItemList)")
-        print("保存完了！")
+//        print("stItemList = \(stItemList)")
+//        print("保存完了！")
         
 //        // リスト表示更新
 //        tableView.reloadData()
@@ -1406,12 +1499,12 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
     
     // デリゲートメソッド(チェックマークタップ)
     func cellTappedMarking(cell: ItemCell, checkFlg: Bool) {
-        print("セルのチェックマークがタップされたデリゲート処理")
-        print("cell.cellRow = \(cell.cellRow)")
+//        print("セルのチェックマークがタップされたデリゲート処理")
+//        print("cell.cellRow = \(cell.cellRow)")
         // セルの行数を取得
         let index = cell.cellRow
-        print("index = \(index)")
-        print("checkFlg = \(checkFlg)")
+//        print("index = \(index)")
+//        print("checkFlg = \(checkFlg)")
         
         for_itemCount: for i in 0..<stItemList.count {
             if selectedLabelTag == stItemList[i].itemListKey {
@@ -1420,7 +1513,7 @@ extension ViewController5: UITableViewDelegate, UITableViewDataSource, ItemDeleg
                 break for_itemCount
             }
         }
-        print("stItemList = \(stItemList)")
+//        print("stItemList = \(stItemList)")
         
         // 保存
         saveStItemList(stItemList: stItemList)
@@ -1447,16 +1540,16 @@ extension UIScrollView {
     
     open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.next?.touchesBegan(touches, with: event)
-        print("touches began")
+        //print("touches began")
     }
     
     override open func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.superview?.touchesMoved(touches, with: event)
-        print("touches moved")
+        //print("touches moved")
     }
     
     override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.superview?.touchesEnded(touches, with: event)
-        print("touches ended")
+        //print("touches ended")
     }
 }

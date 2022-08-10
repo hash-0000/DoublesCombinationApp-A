@@ -82,7 +82,7 @@ class ItemCell: UITableViewCell, UITextFieldDelegate {
     //-- キーボードを閉じる --
     // リターン(完了)をタップで閉じる
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        print("完了タップ！（セルの処理）")
+        //print("完了タップ！（セルの処理）")
         // キーボードを閉じる
         self.textField.resignFirstResponder()
         self.textField.text = textField.text
@@ -91,20 +91,20 @@ class ItemCell: UITableViewCell, UITextFieldDelegate {
     
     // デリゲートメソッド(完了タップ)
     func textFieldDidEndEditing(_ textField: UITextField) {
-        print("セルの処理：textField.text! = \(textField.text!)")
+        //print("セルの処理：textField.text! = \(textField.text!)")
         //テキストフィールドから受けた通知をデリゲート先に流す
         self.delegate.textFieldDidEndEditing(cell: self, value:textField.text!)
     }
     
     // デリゲートメソッド(チェックマークタップ)
     func cellTappedMarking(checkFlg: Bool) {
-        print("セルのチェックマークがタップされたデリゲート処理")
+        //print("セルのチェックマークがタップされたデリゲート処理")
         self.delegate.cellTappedMarking(cell: self, checkFlg: checkFlg)
     }
     
     
     @IBAction func checkButton(_ sender: Any) {
-        print("チェックボタンがタップされた！")
+        //print("チェックボタンがタップされた！")
         if checkFlg == false {
             // false状態でタップされた場合
             // フラグを反転してチェックマークを入れる
@@ -115,7 +115,7 @@ class ItemCell: UITableViewCell, UITextFieldDelegate {
             
             checkLabel.text = "✓" // チェックマーク付加
             self.checkLabel.textColor = mainColor // チェックマーク色付け
-            print("checkFlg = \(checkFlg)")
+            //print("checkFlg = \(checkFlg)")
         } else {
             // true状態でタップされた場合
             // フラグを反転してチェックマークを外す
@@ -126,13 +126,13 @@ class ItemCell: UITableViewCell, UITextFieldDelegate {
             
             checkLabel.text = "" // チェックマーク削除
             self.checkLabel.textColor = .white // チェックマーク白色
-            print("checkFlg = \(checkFlg)")
+            //print("checkFlg = \(checkFlg)")
         }
         
         // チェック有無でテキストに属性付加
         attributeText()
         
-        print("セルがタップされた（セルの処理）")
+        //print("セルがタップされた（セルの処理）")
         // デリゲート
         self.delegate.cellTappedMarking(cell: self, checkFlg: checkFlg)
     }

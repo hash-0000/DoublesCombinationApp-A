@@ -21,6 +21,10 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
     @IBOutlet weak var addButton: UIButton!
     @IBOutlet weak var tableView: UITableView!
     
+    // 背景色用View
+    @IBOutlet weak var backView: UIView!
+    
+    
     // AdMobバナー
     var bannerView: GADBannerView!
     
@@ -41,10 +45,17 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
 //        self.tabBarController!.tabBar.items![tagetTabBar].isEnabled = true // タブの有効化
 //    }
     
+    // tableViewのy座標の初期値
+    var tableViewFrameOriginY: CGFloat = 0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         navigationController?.delegate = self  // 戻る処理用
+        
+        // 背景色用View
+        self.view.sendSubviewToBack(backView) // 最背面に移動
+        self.backView.backgroundColor = .systemGray6 // 色指定
         
         // スクリーンの横縦幅
         let screenWidth:CGFloat = self.view.frame.width
@@ -53,7 +64,7 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
         barItemBack.tintColor = mainColor
         
         // ■■ AdMobバナー ■■
-        let adSize = GADAdSizeFromCGSize(CGSize(width: screenWidth, height: screenWidth*50/320))
+        let adSize = GADAdSizeFromCGSize(CGSize(width: screenWidth, height: screenWidth*100/320))
         bannerView = GADBannerView(adSize: adSize)
         //bannerView.adUnitID = "ca-app-pub-8819499017949234/2255414473" //本番ID
         //bannerView.adUnitID = "ca-app-pub-3940256099942544/2934735716" //サンプルID
@@ -66,7 +77,7 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
         // UserDefaults全削除
         //removeUserDefaults()
         
-        self.view.backgroundColor = .systemGray6
+        //self.view.backgroundColor = .systemGray6
         
         textField.tag = 99990
         addButton.tag = 99991
@@ -101,13 +112,13 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
             groupList.append(contentsOf: groupIDListTmp)
         } else {
             // データが存在しない場合、デフォルトを用意
-            print("データなしのため初期値設定")
+            //print("データなしのため初期値設定")
             let date = Date()
             let df = DateFormatter()
             df.dateFormat = "yyyyMMddHHmmss"
             // グループIDを発行
             let groupID: Int = Int( df.string(from: date))!
-            print("groupID = \(groupID)")
+            //print("groupID = \(groupID)")
             groupList.append(GroupList(ID: groupID, name: "グループ1"))
             // 保存
             saveGroupList(groupList: groupList)
@@ -116,9 +127,9 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
             let cellItem: [CellItem] = [CellItem(checkLfg: false, text: "サンプル1")]
             let stItemList: [ItemList] = [ItemList(itemListKey: groupID, itemList: cellItem)]
             saveStItemList(stItemList: stItemList)
-            print("stItemList = \(stItemList)")
+            //print("stItemList = \(stItemList)")
         }
-        print("groupList = \(groupList)")
+        //print("groupList = \(groupList)")
         
         textField.returnKeyType = UIReturnKeyType.done // 改行→完了に表記変更
         textField.delegate = self
@@ -131,9 +142,65 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
         tapGesture.cancelsTouchesInView = false
         // Viewに追加
         view.addGestureRecognizer(tapGesture)
+        
+        // ***キーボード表示・非表示の際にViewを上下に移動
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
     }
     
+    // ***キーボードを表示する際の処理
+    @objc func keyboardWillShow(notification: NSNotification) {
+        // textFieldタップの場合は何もしない
+        if textField.isFirstResponder {
+            return
+        }
     
+        if self.view.frame.origin.y == 0 {
+            if self.tableView.frame.origin.y == tableViewFrameOriginY {
+                if let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
+    //                self.tableView.frame.origin.y -= keyboardRect.height * 0.4
+                    self.view.frame.origin.y -= keyboardRect.height * 0.70
+                }
+            }
+        }
+    }
+    
+    // ***キーボードを閉じる際の処理
+    @objc func keyboardWillHide(notification: NSNotification) {
+        if self.view.frame.origin.y != 0 {
+            self.view.frame.origin.y = 0
+        }
+//        if self.tableView.frame.origin.y != tableViewFrameOriginY {
+//            self.tableView.frame.origin.y = tableViewFrameOriginY
+//        }
+    }
+    
+    // レイアウトサイズ決定後の処理
+    override func viewDidLayoutSubviews() {
+        // tableViewのy座標を記録（キーボード表示で上下移動後に使用）
+        tableViewFrameOriginY = tableView.frame.origin.y
+        
+        // スクリーンの横縦幅
+//        let screenWidth:CGFloat = self.view.frame.width
+        let screenHeight:CGFloat = self.view.frame.height
+        
+        // iPhone以外の場合
+        if UIDevice.current.userInterfaceIdiom != .phone {
+            //print("これはiPadです。")
+            // tableView_xのレイアウト調整
+        
+            let tableView_x = self.tableView.frame.origin.x
+            let tableView_y = self.tableView.frame.origin.y
+            let tableView_width = self.tableView.frame.width
+            //let interFrame2_height = self.interFrame2.frame.height
+            //AutoLayout解除
+            self.tableView.translatesAutoresizingMaskIntoConstraints = true
+            // currentViewControllerの高さ*0.8
+            self.tableView.frame = CGRect(x: tableView_x, y: tableView_y,
+                                              width: tableView_width,
+                                              height: screenHeight * 0.55)
+        }
+    }
     
     
     // 保存([stItemList])
@@ -152,7 +219,7 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
 //        print("セル追加&保存")
 //        addGroupName()
 //
-        print("キーボードを閉じるA")
+        //print("キーボードを閉じるA")
 //        view.endEditing(true)
     }
     
@@ -167,12 +234,12 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
         if textField.text != "" {
             // テキストが空でない場合
             // セル追加&保存
-            print("セル追加&保存")
+            //print("セル追加&保存")
             addGroupName()
         }
         
         // キーボードを閉じる
-        print("キーボードを閉じるB")
+        //print("キーボードを閉じるB")
         textField.resignFirstResponder()
         textField.text = textField.text
         return true
@@ -203,42 +270,42 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
         }
         
         // その他のUIパーツをタップした場合、キーボードを閉じる
-        print("キーボードを閉じるC")
+        //print("キーボードを閉じるC")
         view.endEditing(true)
     }
     
     // デリゲートメソッド(完了タップ)
     func textFieldDidEndEditing(cell: GroupListTableViewCell, value:String) {
-        print("デリゲートメソッド")
+        //print("デリゲートメソッド")
         
         // セルの行数を取得
         let index = cell.cellRow
-        print("index = \(index)")
+        //print("index = \(index)")
         
         //データを更新
         groupList[index].name = value
-        print("groupList = \(groupList)")
+        //print("groupList = \(groupList)")
         
         // 保存
         saveGroupList(groupList: groupList)
     }
     
-    // UserDefaults全削除
-    func removeUserDefaults() {
-        let appDomain = Bundle.main.bundleIdentifier
-        UserDefaults.standard.removePersistentDomain(forName: appDomain!)
-    }
+    // UserDefaults全削除（開発用）
+//    func removeUserDefaults() {
+//        let appDomain = Bundle.main.bundleIdentifier
+//        UserDefaults.standard.removePersistentDomain(forName: appDomain!)
+//    }
     
     
     // ※※※動作がおかしい。追加タップでテキストなし判定となる！？
     // 追加ボタンをタップ時の処理
     @IBAction func tapAddButton(_ sender: Any) {
         // キーボードは閉じない
-        print("追加ボタンタップ！")
+        //print("追加ボタンタップ！")
         if textField.text != "" {
             // テキストが空でない場合
             // セル追加&保存
-            print("セル追加&保存")
+            //print("セル追加&保存")
             addGroupName()
             
         } else {
@@ -264,13 +331,13 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
     // ※※※追加ボタンタップ時に、キーボードを閉じる処理が複数回呼ばれることが問題！！！
     // セル追加処理
     func addGroupName() {
-        print("セル追加処理")
+        //print("セル追加処理")
         let date = Date()
         let df = DateFormatter()
         df.dateFormat = "yyyyMMddHHmmss"
         // グループIDを発行
         let groupID: Int = Int( df.string(from: date))!
-        print("groupID = \(groupID)")
+        //print("groupID = \(groupID)")
         
         // 保存済みのIDが発行された場合、重複するので何もせず終了
         for i in 0..<groupList.count {
@@ -280,7 +347,7 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
         }
         
         groupList.append(GroupList(ID: groupID, name: textField.text!)) // 追加
-        print("groupList = \(groupList)")
+        //print("groupList = \(groupList)")
         saveGroupList(groupList: groupList) // 保存
         
         // stItemListも追加&保存
@@ -288,7 +355,7 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
         let cellItem: [CellItem] = [CellItem(checkLfg: false, text: "")]
         stItemList.append(ItemList(itemListKey: groupID, itemList: cellItem))
         saveStItemList(stItemList: stItemList)
-        print("stItemList = \(stItemList)")
+        //print("stItemList = \(stItemList)")
         
         // 画面更新
         textField.text = ""
@@ -336,7 +403,7 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
     
     // セル設定
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        print("セルの表示内容設定")
+//        print("セルの表示内容設定")
         let cell = tableView.dequeueReusableCell(withIdentifier: "GroupListTableViewCell", for: indexPath) as! GroupListTableViewCell
         
         // userDefaultsに保存された値の取得
@@ -380,7 +447,7 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
         // 移動先の配列の位置にデータを挿入
         groupList.insert(moveData, at:destinationIndexPath.row)
         // 保存
-        print("groupList = \(groupList)")
+        //print("groupList = \(groupList)")
         saveGroupList(groupList: groupList) // 保存
     }
     
@@ -397,7 +464,7 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
             groupList.remove(at: indexPath.row)
             // セルを削除
             tableView.deleteRows(at: [indexPath], with: UITableView.RowAnimation.fade)
-            print("groupList = \(groupList)")
+            //print("groupList = \(groupList)")
             
             saveGroupList(groupList: groupList) // 保存
         }
@@ -405,7 +472,7 @@ class ViewController6: UIViewController, UITableViewDataSource, UITableViewDeleg
     
     // セルタップ時にキーボードを表示
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("セルタップ！！")
+        //print("セルタップ！！")
         let cell = tableView.dequeueReusableCell(withIdentifier: "GroupListTableViewCell", for: indexPath) as! GroupListTableViewCell
         // セルに色を付けない
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)

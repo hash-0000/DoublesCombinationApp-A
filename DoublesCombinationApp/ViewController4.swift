@@ -95,6 +95,47 @@ class ViewController4: UIViewController, UITableViewDelegate, UITableViewDataSou
     // 現在の参加メンバー数：46人以上
     let list_0 = [  ""]
     
+    
+    // レイアウトサイズ決定後の処理
+    override func viewDidLayoutSubviews() {
+        // スクリーンの横縦幅
+//        let screenWidth:CGFloat = self.view.frame.width
+        let screenHeight:CGFloat = self.view.frame.height
+        
+        
+        
+        // iPhone以外の場合
+        if UIDevice.current.userInterfaceIdiom != .phone {
+            //print("これはiPadです。")
+            // interFrame2のレイアウト調整
+            let interFrame2_x = self.interFrame2.frame.origin.x
+            let interFrame2_y = self.interFrame2.frame.origin.y
+            let interFrame2_width = self.interFrame2.frame.width
+            //let interFrame2_height = self.interFrame2.frame.height
+            //AutoLayout解除
+            self.interFrame2.translatesAutoresizingMaskIntoConstraints = true
+            // currentViewControllerの高さ*0.8
+            self.interFrame2.frame = CGRect(x: interFrame2_x, y: interFrame2_y,
+                                              width: interFrame2_width,
+                                              height: screenHeight * 0.6)
+            
+            // interFrame3のレイアウト調整
+            let interFrame3_x = self.interFrame3.frame.origin.x
+            let interFrame3_y = interFrame2_y + self.interFrame2.frame.height + 15
+            let interFrame3_width = self.interFrame3.frame.width
+            //let interFrame3_height = self.interFrame2.frame.height
+            //AutoLayout解除
+            self.interFrame3.translatesAutoresizingMaskIntoConstraints = true
+            // currentViewControllerの高さ*0.8
+            self.interFrame3.frame = CGRect(x: interFrame3_x, y: interFrame3_y,
+                                              width: interFrame3_width,
+                                              height: screenHeight * 0.065)
+        }
+        
+    }
+    
+    
+    
     // viewが表示される度に呼ばれる
     override func viewWillAppear(_ animated: Bool) {
         // タブの無効化
@@ -989,36 +1030,36 @@ class ViewController4: UIViewController, UITableViewDelegate, UITableViewDataSou
     
     /// Tells the delegate an ad request loaded an ad.
     func adViewDidReceiveAd(_ bannerView: GADBannerView) {
-      print("adViewDidReceiveAd")
+        //print("adViewDidReceiveAd")
     }
 
     /// Tells the delegate an ad request failed.
     func adView(_ bannerView: GADBannerView,
         didFailToReceiveAdWithError error: GADRequestError) {
-      print("adView:didFailToReceiveAdWithError: \(error.localizedDescription)")
-        print("error=",error)
+        //print("adView:didFailToReceiveAdWithError: \(error.localizedDescription)")
+        //print("error=",error)
     }
 
     /// Tells the delegate that a full-screen view will be presented in response
     /// to the user clicking on an ad.
     func adViewWillPresentScreen(_ bannerView: GADBannerView) {
-      print("adViewWillPresentScreen")
+        //print("adViewWillPresentScreen")
     }
 
     /// Tells the delegate that the full-screen view will be dismissed.
     func adViewWillDismissScreen(_ bannerView: GADBannerView) {
-      print("adViewWillDismissScreen")
+        //print("adViewWillDismissScreen")
     }
 
     /// Tells the delegate that the full-screen view has been dismissed.
     func adViewDidDismissScreen(_ bannerView: GADBannerView) {
-      print("adViewDidDismissScreen")
+        //print("adViewDidDismissScreen")
     }
 
     /// Tells the delegate that a user click will open another app (such as
     /// the App Store), backgrounding the current app.
     func adViewWillLeaveApplication(_ bannerView: GADBannerView) {
-      print("adViewWillLeaveApplication")
+        //print("adViewWillLeaveApplication")
     }
     
 }

@@ -191,7 +191,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         // In this case, we instantiate the banner with desired ad size.
         //bannerView = GADBannerView(adSize: kGADAdSizeBanner)
         //let adSize = GADAdSizeFromCGSize(CGSize(width: screenWidth, height: screenWidth*45/320))
-        let adSize = GADAdSizeFromCGSize(CGSize(width: screenWidth, height: screenWidth*50/320))
+        let adSize = GADAdSizeFromCGSize(CGSize(width: screenWidth, height: screenWidth*100/320))
         bannerView = GADBannerView(adSize: adSize)
         //bannerView.adUnitID = "ca-app-pub-8819499017949234/2255414473" //本番ID
         //bannerView.adUnitID = "ca-app-pub-3940256099942544/2934735716" //サンプルID

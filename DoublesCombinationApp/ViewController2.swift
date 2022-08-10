@@ -129,6 +129,46 @@ class ViewController2: UIViewController, UITableViewDelegate, UITableViewDataSou
         let screenWidth:CGFloat = self.view.frame.width
         let screenHeight:CGFloat = self.view.frame.height
         
+        
+        
+        // iPhone以外の場合
+        if UIDevice.current.userInterfaceIdiom != .phone {
+            //print("これはiPadです。")
+            // containerView()のレイアウト調整
+            let containerView_x = self.containerView.frame.origin.x
+            let containerView_y = self.containerView.frame.origin.y
+            let containerView_width = self.containerView.frame.width
+            //let containerView_height = self.containerView.frame.height
+            //AutoLayout解除
+            self.containerView.translatesAutoresizingMaskIntoConstraints = true
+            // currentViewControllerの高さ*0.8
+            self.containerView.frame = CGRect(x: containerView_x, y: containerView_y,
+                                              width: containerView_width,
+                                              height: screenHeight * 0.74)
+            
+            // tableViewのレイアウト調整
+            let tableView_x = self.tableView.frame.origin.x
+            let tableView_y = self.tableView.frame.origin.y
+            let tableView_width = self.tableView.frame.width
+            //let tableView_height = self.tableView.frame.height
+            //AutoLayout解除
+            self.tableView.translatesAutoresizingMaskIntoConstraints = true
+            // currentViewControllerの高さ*0.8
+            self.tableView.frame = CGRect(x: tableView_x, y: tableView_y,
+                                              width: tableView_width,
+                                              height: screenHeight * 0.65)
+            
+            
+            //AutoLayout解除
+            self.numberOfParticipantsLabel.translatesAutoresizingMaskIntoConstraints = true
+            // numberOfParticipantsLabel
+            numberOfParticipantsLabel.frame = CGRect(x:startTimeLabel.frame.origin.x, y:startTimeLabel.frame.origin.y + 30, width:200, height:30)
+            
+            
+        }
+        
+        
+        
         // tableViewのセルの縦幅
         let cellHight: CGFloat = screenHeight * 45 / 896
         if cellHight > 45 {
@@ -148,9 +188,24 @@ class ViewController2: UIViewController, UITableViewDelegate, UITableViewDataSou
         addCellButton.layer.shadowOpacity = 0.8  // 9
         addCellButton.layer.shadowRadius = 2  // 10
         addCellButton.layer.shadowColor = UIColor.gray.cgColor  // 11
+        
     }
     
     override func viewDidLoad() {
+//        // iPhone以外の場合
+//        if UIDevice.current.userInterfaceIdiom != .phone {
+//            print("これはiPadです。")
+//           // currentViewControllerの高さ*0.8
+////            self.containerView.frame.height = self.containerView.frame.height * 0.8
+//            let containerView_x = self.containerView.frame.origin.x
+//            let containerView_y = self.containerView.frame.origin.y
+//            let containerView_width = self.containerView.frame.width
+//            let containerView_height = self.containerView.frame.height
+//            self.containerView.frame = CGRect(x: containerView_x, y: containerView_y,
+//                                              width: containerView_width,
+//                                              height: containerView_height * 0.6)
+//        }
+        
         // chileViewデフォルト表示
         self.currentViewController = self.storyboard?.instantiateViewController(withIdentifier: "ComponentA")
         self.currentViewController!.view.translatesAutoresizingMaskIntoConstraints = false
@@ -252,7 +307,9 @@ class ViewController2: UIViewController, UITableViewDelegate, UITableViewDataSou
         startTimeLabel.frame = CGRect(x:screenWidth * 20/414, y:_y + screenHeight * 5/896, width:200, height:labelHeight)
         
         // numberOfParticipantsLabel
-        numberOfParticipantsLabel.frame = CGRect(x:screenWidth * 20/414, y:_y + screenHeight * 10/896 + labelHeight, width:200, height:labelHeight)
+        numberOfParticipantsLabel.frame = CGRect(x:screenWidth * 20/414, y:_y + screenHeight * 5/896 + labelHeight * 1.75, width:200, height:labelHeight)
+//        // numberOfParticipantsLabel
+//        numberOfParticipantsLabel.frame = CGRect(x:screenWidth * 20/414, y:_y + screenHeight * 10/896 + labelHeight, width:200, height:labelHeight)
         
         
         // チェック有数計上配列に参加人数分の数を格納、最初はチェック無しなので全員”0”

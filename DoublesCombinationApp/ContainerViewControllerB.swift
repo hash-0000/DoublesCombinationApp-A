@@ -60,7 +60,7 @@ class ContainerViewControllerB: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("ControllerB表示！！")
+        //print("ControllerB表示！！")
         
         groupeName.text = ""
         fixStateLabel.text = ""
@@ -121,6 +121,9 @@ class ContainerViewControllerB: UIViewController {
         
         // メンバー追加を促すラベル削除（念の為）
         removeMsgLabel()
+        
+        
+        
     }
     
     // toolbar用 決定/キャンセル
@@ -136,9 +139,18 @@ class ContainerViewControllerB: UIViewController {
         super.didReceiveMemoryWarning()
     }
     
+    // 画面表示後の処理
+    override func viewDidAppear(_ animated: Bool) {
+        // tableViewの表示がない時（itemListのデータ数が0の時）
+        if itemList.count == 0 {
+            // 操作説明ラベル表示
+            showDescriptionLabel()
+        }
+    }
+    
     // 画面表示直前の処理（表示されるたびに呼ばれる）
     override func viewWillAppear(_ animated: Bool) {
-        print("画面表示直前に呼ばれた！！！")
+        //print("画面表示直前に呼ばれた！！！")
         // セル数初期化
         tablecellCount = 0
         
@@ -156,15 +168,15 @@ class ContainerViewControllerB: UIViewController {
             df.dateFormat = "yyyyMMddHHmmss"
             // グループIDを発行
             let groupID: Int = Int( df.string(from: date))!
-            print("groupID = \(groupID)")
+            //print("groupID = \(groupID)")
             groupList.append(GroupList(ID: groupID, name: "グループ1"))
             
             // groupListを保存
             saveGroupList(groupList: groupList)
         }
         
-        print("groupList取得")
-        print("groupList = \(groupList)")
+        //print("groupList取得")
+        //print("groupList = \(groupList)")
         
         // 初期化
         groupeName.text = ""
@@ -235,7 +247,7 @@ class ContainerViewControllerB: UIViewController {
                 for i in 0..<itemListTmp.count {
                     itemList.append(itemListTmp[i])
                 }
-                print("itemList = \(itemList)")
+                //print("itemList = \(itemList)")
                 // 保存
                 saveItemList(itemList: itemList)
                 // 表示更新
@@ -410,10 +422,10 @@ class ContainerViewControllerB: UIViewController {
         if let stItemListTmp = loadStItemList() {
             // 保存データが存在する場合
             stItemList.append(contentsOf: stItemListTmp)
-            print("stItemList取得成功！")
+            //print("stItemList取得成功！")
             
-            print("selectedGroupID = \(selectedGroupID)")
-            print("stItemList = \(stItemList)")
+            //print("selectedGroupID = \(selectedGroupID)")
+            //print("stItemList = \(stItemList)")
             // itemListにメンバー名を格納
             for_checkIDFlg: for i in 0..<stItemList.count {
                 if stItemList[i].itemListKey == selectedGroupID {
@@ -428,21 +440,21 @@ class ContainerViewControllerB: UIViewController {
                     }
                     // 保存
                     saveItemList(itemList: itemList)
-                    print("itemList保存！")
+                    //print("itemList保存！")
                     break for_checkIDFlg
                 }
             }
-            print("itemList = \(itemList)")
+            //print("itemList = \(itemList)")
             
             // tableView更新
             tableView.reloadData()
         } else {
             // 取得失敗した場合
             // itemListとtableViewはそのまま
-            print("stItemList取得失敗")
+            //print("stItemList取得失敗")
             //stItemList = []
         }
-        print("stItemList = \(stItemList)")
+        //print("stItemList = \(stItemList)")
         
         // メンバーがいない場合、メンバー追加を促すラベル表示
         if tablecellCount == 0 {
@@ -471,7 +483,7 @@ class ContainerViewControllerB: UIViewController {
             msgLabel.textColor = .systemGray2 // 文字色指定
             msgLabel.textAlignment = NSTextAlignment.center // 中央寄せ
             self.view.addSubview(msgLabel)
-            print("メンバー追加催促ラベル表示！！")
+            //print("メンバー追加催促ラベル表示！！")
         }
     }
     
@@ -512,7 +524,7 @@ class ContainerViewControllerB: UIViewController {
         itemList.shuffle()
         
         // 保存
-        print("itemList = \(itemList)")
+        //print("itemList = \(itemList)")
         saveItemList(itemList: itemList)
         
         // 表示更新
@@ -525,30 +537,58 @@ class ContainerViewControllerB: UIViewController {
         
         // tableViewのセル数=0の場合
         if tablecellCount == 0 {
-            // メンバー追加を促すラベル削除
-            removeMsgLabel()
             
-            // UILabel作成
-            let msgLabel = UILabel()
-            msgLabel.tag = msgLabelTag
-            msgLabel.numberOfLines = 0 // 複数行表示
-            // メッセージ文言作成
-            let text1: String = "グループを選択し、"
-            let text2: String = "メンバー表を表示しましょう"
-            msgLabel.text = text1 + "\n" + text2
-            //frame設定
-            let msgLabelWidth: CGFloat = 300 // msgLabel横幅
-            let screenWidth: CGFloat = self.view.frame.width // 画面横幅
-            msgLabel.frame = CGRect(x: (screenWidth - msgLabelWidth) / 2, y: self.tableView.frame.minY + 20, width: msgLabelWidth, height: 80)
-            msgLabel.textColor = .systemGray2 // 文字色指定
-            msgLabel.textAlignment = NSTextAlignment.center // 中央寄せ
-            self.view.addSubview(msgLabel)
-            print("グループ選択・メンバー表の表示催促ラベル表示！！")
+            // 操作説明ラベル表示
+            showDescriptionLabel()
+            
+//            // メンバー追加を促すラベル削除
+//            removeMsgLabel()
+//
+//            // UILabel作成
+//            let msgLabel = UILabel()
+//            msgLabel.tag = msgLabelTag
+//            msgLabel.numberOfLines = 0 // 複数行表示
+//            // メッセージ文言作成
+//            let text1: String = "グループを選択し、"
+//            let text2: String = "メンバーリストを表示しましょう"
+//            msgLabel.text = text1 + "\n" + text2
+//            //frame設定
+//            let msgLabelWidth: CGFloat = 300 // msgLabel横幅
+//            let screenWidth: CGFloat = self.view.frame.width // 画面横幅
+//            msgLabel.frame = CGRect(x: (screenWidth - msgLabelWidth) / 2, y: self.tableView.frame.minY + 20, width: msgLabelWidth, height: 80)
+//            msgLabel.textColor = .systemGray2 // 文字色指定
+//            msgLabel.textAlignment = NSTextAlignment.center // 中央寄せ
+//            self.view.addSubview(msgLabel)
+//            //print("グループ選択・メンバー表の表示催促ラベル表示！！")
             
             flg = true
         }
         return flg
     }
+    
+    // 操作説明ラベル表示
+    func showDescriptionLabel() {
+        // メンバー追加を促すラベル削除
+        removeMsgLabel()
+        
+        // UILabel作成
+        let msgLabel = UILabel()
+        msgLabel.tag = msgLabelTag
+        msgLabel.numberOfLines = 0 // 複数行表示
+        // メッセージ文言作成
+        let text1: String = "グループを選択し、"
+        let text2: String = "メンバーリストを表示しましょう"
+        msgLabel.text = text1 + "\n" + text2
+        //frame設定
+        let msgLabelWidth: CGFloat = 300 // msgLabel横幅
+        let screenWidth: CGFloat = self.view.frame.width // 画面横幅
+        msgLabel.frame = CGRect(x: (screenWidth - msgLabelWidth) / 2, y: self.tableView.frame.minY + 20, width: msgLabelWidth, height: 80)
+        msgLabel.textColor = .systemGray2 // 文字色指定
+        msgLabel.textAlignment = NSTextAlignment.center // 中央寄せ
+        self.view.addSubview(msgLabel)
+        //print("グループ選択・メンバー表の表示催促ラベル表示！！")
+    }
+    
     
     // 固定ボタン押下（リスト固定）
     @IBAction func listFix(_ sender: Any) {
@@ -676,7 +716,7 @@ extension ContainerViewControllerB: UITableViewDelegate, UITableViewDataSource {
     
     // セル移動時のデータの処理
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        print("セルを移動！！")
+        //print("セルを移動！！")
         
         // 移動したセルのデータ取得
         let moveData = itemList[sourceIndexPath.row]
@@ -685,7 +725,7 @@ extension ContainerViewControllerB: UITableViewDelegate, UITableViewDataSource {
         // 移動先の配列の位置にデータを挿入
         itemList.insert(moveData, at:destinationIndexPath.row)
         // 保存
-        print("itemList = \(itemList)")
+        //print("itemList = \(itemList)")
         saveItemList(itemList: itemList)
         
         // 0.2秒止める
